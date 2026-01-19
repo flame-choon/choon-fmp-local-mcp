@@ -786,6 +786,373 @@ server.tool(
   }
 );
 
+// Tool 16: Stock Quote - 실시간 주식 시세
+server.tool(
+  "get_stock_quote",
+  "Get real-time stock quote including price, change, volume, market cap, and 52-week range",
+  {
+    symbol: z.string().describe("Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      const quote = data[0];
+      const result = {
+        symbol: quote.symbol,
+        name: quote.name,
+        price: quote.price,
+        change: quote.change,
+        changePercentage: quote.changePercentage,
+        volume: quote.volume,
+        dayLow: quote.dayLow,
+        dayHigh: quote.dayHigh,
+        yearLow: quote.yearLow,
+        yearHigh: quote.yearHigh,
+        marketCap: quote.marketCap,
+        priceAvg50: quote.priceAvg50,
+        priceAvg200: quote.priceAvg200,
+        open: quote.open,
+        previousClose: quote.previousClose,
+        exchange: quote.exchange,
+        timestamp: quote.timestamp
+      };
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching stock quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 17: Stock Quote Short - 간단한 주식 시세
+server.tool(
+  "get_stock_quote_short",
+  "Get simplified stock quote with price, change, and volume only",
+  {
+    symbol: z.string().describe("Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/quote-short`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching stock quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 18: Stock Price Change - 주가 변동률
+server.tool(
+  "get_stock_price_change",
+  "Get stock price change percentages over multiple time periods (1D, 5D, 1M, 3M, 6M, YTD, 1Y, 3Y, 5Y, 10Y)",
+  {
+    symbol: z.string().describe("Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/stock-price-change`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No price change data found for symbol: ${symbol}` }]
+        };
+      }
+
+      const change = data[0];
+      const result = {
+        symbol: change.symbol,
+        "1D": change["1D"],
+        "5D": change["5D"],
+        "1M": change["1M"],
+        "3M": change["3M"],
+        "6M": change["6M"],
+        "YTD": change["ytd"],
+        "1Y": change["1Y"],
+        "3Y": change["3Y"],
+        "5Y": change["5Y"],
+        "10Y": change["10Y"]
+      };
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching price change: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 19: Aftermarket Trade - 시간외 거래
+server.tool(
+  "get_aftermarket_trade",
+  "Get aftermarket (pre-market and post-market) trade data",
+  {
+    symbol: z.string().describe("Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/aftermarket-trade`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No aftermarket trade data found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching aftermarket trade: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 20: Aftermarket Quote - 시간외 호가
+server.tool(
+  "get_aftermarket_quote",
+  "Get aftermarket quote with bid/ask prices and sizes",
+  {
+    symbol: z.string().describe("Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/aftermarket-quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No aftermarket quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching aftermarket quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 21: Batch Stock Quotes - 여러 종목 시세 조회 (유료)
+server.tool(
+  "get_batch_stock_quotes",
+  "Get quotes for multiple stocks at once (comma-separated symbols) - Requires paid plan",
+  {
+    symbols: z.string().describe("Comma-separated stock symbols (e.g., AAPL,MSFT,GOOGL)")
+  },
+  async ({ symbols }) => {
+    try {
+      const data = await fetchFromFMP(`/batch-quote`, { symbols: symbols.toUpperCase() });
+
+      if (typeof data === 'string' && data.includes('Restricted')) {
+        return {
+          content: [{ type: "text", text: `Batch quotes require a paid FMP subscription.` }]
+        };
+      }
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No quotes found for symbols: ${symbols}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }]
+      };
+    } catch (error) {
+      if (error.message.includes('403')) {
+        return {
+          content: [{ type: "text", text: `Batch quotes require a paid FMP subscription.` }],
+          isError: true
+        };
+      }
+      return {
+        content: [{ type: "text", text: `Error fetching batch quotes: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 22: ETF Quote - ETF 시세
+server.tool(
+  "get_etf_quote",
+  "Get ETF quote data",
+  {
+    symbol: z.string().describe("ETF symbol (e.g., SPY, QQQ, VTI)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/etf-quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No ETF quote found for symbol: ${symbol}. Try using get_stock_quote instead.` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching ETF quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 23: Forex Quote - 외환 시세
+server.tool(
+  "get_forex_quote",
+  "Get forex currency pair quote",
+  {
+    symbol: z.string().describe("Forex pair symbol (e.g., EURUSD, GBPUSD, USDJPY)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/forex-quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No forex quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching forex quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 24: Crypto Quote - 암호화폐 시세
+server.tool(
+  "get_crypto_quote",
+  "Get cryptocurrency quote",
+  {
+    symbol: z.string().describe("Crypto symbol (e.g., BTCUSD, ETHUSD)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/crypto-quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No crypto quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching crypto quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 25: Commodity Quote - 원자재 시세
+server.tool(
+  "get_commodity_quote",
+  "Get commodity quote (gold, oil, etc.)",
+  {
+    symbol: z.string().describe("Commodity symbol (e.g., GCUSD for gold, CLUSD for oil)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/commodity-quote`, { symbol: symbol.toUpperCase() });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No commodity quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching commodity quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
+// Tool 26: Index Quote - 지수 시세
+server.tool(
+  "get_index_quote",
+  "Get market index quote (S&P 500, NASDAQ, etc.)",
+  {
+    symbol: z.string().describe("Index symbol (e.g., ^GSPC for S&P 500, ^IXIC for NASDAQ)")
+  },
+  async ({ symbol }) => {
+    try {
+      const data = await fetchFromFMP(`/index-quote`, { symbol: symbol });
+
+      if (!data || data.length === 0) {
+        return {
+          content: [{ type: "text", text: `No index quote found for symbol: ${symbol}` }]
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(data[0], null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error fetching index quote: ${error.message}` }],
+        isError: true
+      };
+    }
+  }
+);
+
 // 서버 시작
 async function main() {
   const transport = new StdioServerTransport();
