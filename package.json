@@ -1,0 +1,20 @@
+{
+  "name": "fmp-mcp-local-server",
+  "version": "1.0.0",
+  "description": "FMP (Financial Modeling Prep) API MCP Server",
+  "main": "index.js",
+  "bin": {
+    "fmp-mcp-server": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["mcp", "fmp", "financial", "api"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "zod": "^4.3.5"
+  }
+}
